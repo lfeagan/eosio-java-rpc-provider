@@ -1,0 +1,4 @@
+# copy/rename to local.properties
+# username, not email address
+bintray.user=yourUsername
+bintray.apikey=yourApiKey
