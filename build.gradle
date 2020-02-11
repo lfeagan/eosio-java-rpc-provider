@@ -1,0 +1,139 @@
+plugins {
+    id 'java-library'
+    id 'maven'
+    id 'maven-publish'
+    id "com.jfrog.bintray" version "1.8.4"
+    //id "com.jfrog.bintray" version "1.+"
+}
+
+sourceCompatibility = 1.8
+
+repositories {
+    jcenter()
+    mavenCentral()
+}
+
+dependencies {
+    api 'one.block:eosiojava:0.1.0'
+
+    implementation 'org.jetbrains:annotations:17.0.0'
+    api 'com.squareup.retrofit2:retrofit:2.5.0'
+    api 'com.squareup.retrofit2:converter-gson:2.5.0'
+    api 'com.squareup.okhttp3:logging-interceptor:3.12.1'
+
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+ext {
+    bintrayRepo = 'maven'
+    bintrayName = 'eosiojava'
+
+    publishedGroupId = 'one.block'
+    libraryName = 'DiagonalScrollView'
+    artifact = 'eosiojavarpcprovider'
+
+    libraryDescription = 'This is a pure-Java, without Android dependencies, version of eosiojavarpcprovider'
+
+    siteUrl = 'https://github.com/lfeagan/eosiojavarpcprovider'
+    gitUrl = 'https://github.com/lfeagan/eosiojavarpcprovider.git'
+
+    libraryVersion = '0.1.0'
+
+    developerId = 'lfeagan'
+    developerName = 'Lance Feagan'
+    developerEmail = 'lfeagan@hotmail.com'
+
+    licenseName = 'MIT'
+    licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+    allLicenses = ["Apache-2.0"]
+}
+
+group = publishedGroupId
+version = libraryVersion
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
+
+// Create the pom configuration:
+def pomConfig = {
+    licenses {
+        license {
+            name "MIT"
+            url "http://www.apache.org/licenses/LICENSE-2.0.txt"
+            distribution "repo"
+        }
+    }
+    developers {
+        developer {
+            id "lfeagan"
+            name "Lance Feagan"
+            email "lfeagan@hotmail.com"
+        }
+    }
+
+    scm {
+        url "https://github.com/lfeagan/eosiojavarpcprovider"
+    }
+}
+
+// Create the publication with the pom configuration:
+publishing {
+    publications {
+        MyPublication(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+            groupId publishedGroupId
+            artifactId artifact
+            version libraryVersion
+            pom.withXml {
+                def root = asNode()
+                root.appendNode('description', 'Your description of the lib')
+                root.appendNode('name', 'Your name of the lib')
+                root.appendNode('url', 'https://site_for_lib.tld')
+                root.children().last() + pomConfig
+            }
+        }
+    }
+}
+
+Properties properties = new Properties()
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
+
+bintray {
+//    user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
+//    key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
+    user = properties.getProperty("bintray.user")
+    key = properties.getProperty("bintray.apikey")
+    publications = ['MyPublication']
+    pkg {
+        repo = 'eosiojava'
+        name = 'eosiojavarpcprovider'
+//        userOrg = 'lfeagan'
+        licenses = ['MIT']
+        vcsUrl = 'https://github.com/lfeagan/eosiojavarpcprovider.git'
+        dryRun = false
+        publish = true
+        override = false
+        publicDownloadNumbers = true
+        version {
+            name = '0.1.0-Final'
+            desc = 'EOSIO Java RPC Provider w/out Android Deps'
+            released  = new Date()
+            vcsTag = '0.1.0'
+            attributes = ['gradle-plugin': 'com.use.less:com.use.less.gradle:gradle-useless-plugin']
+        }
+    }
+}
